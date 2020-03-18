@@ -1,20 +1,25 @@
-import { Component, AfterViewInit, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import * as L from 'leaflet';
 import { SeasonsService } from '../services/seasons.service';
+import { LegendComponent } from '../components/legend/legend.component';
+import { PopoverController } from '@ionic/angular';
 
 @Component({
   selector: 'app-tab1',
   templateUrl: 'tab1.page.html',
   styleUrls: ['tab1.page.scss']
 })
-export class Tab1Page implements AfterViewInit, OnInit {
+export class Tab1Page {
 
   private map;
   seasons: any[] = [];
   seasonsMarker: any[] = [];
   seasonsCircle: any[] = [];
 
-  constructor(private seasonsService: SeasonsService) { }
+  constructor(
+    private seasonsService: SeasonsService,
+    public popoverController: PopoverController
+  ) { }
 
   ionViewDidEnter() {
     this.seasonsService.getSeasons().subscribe((data: any) => {
@@ -30,61 +35,49 @@ export class Tab1Page implements AfterViewInit, OnInit {
 
   ionViewWillLeave() {
     this.map.remove();
-    // this.seasonsService.getSeasons().subscribe((data: any) => {
-    //   data.data = data.data.filter(d => {
-    //     if (JSON.stringify(d.sensores).toLowerCase().indexOf('pm2.5') !== -1) {
-    //       return d;
-    //     }
-    //   });
-    //   this.seasons = data.data;
-    //   console.log(data.data);
-    //   this.initMap();
-    // });
   }
 
-  ngOnInit() {
-    // this.seasonsService.getSeasons().subscribe((data: any) => {
-    //   data.data = data.data.filter(d => {
-    //     if (JSON.stringify(d.sensores).toLowerCase().indexOf('pm2.5') !== -1) {
-    //       return d;
-    //     }
-    //   });
-    //   this.seasons = data.data;
-    //   console.log(data.data);
-    //   this.initMap();
-    // });
-  }
-
-  ngAfterViewInit() {
-    // console.log('ngAfterViewInit');
-    // this.seasonsService.getSeasons().subscribe((data: any) => {
-    //   data.data = data.data.filter(d => {
-    //     if (JSON.stringify(d.sensores).toLowerCase().indexOf('pm2.5') !== -1) {
-    //       return d;
-    //     }
-    //   });
-    //   this.seasons = data.data;
-    //   console.log(data.data);
-    //   this.initMap();
-    // });
+  async presentPopover(ev: any) {
+    const popover = await this.popoverController.create({
+      component: LegendComponent,
+      event: ev,
+      // translucent: true
+      mode: 'ios'
+    });
+    return await popover.present();
   }
 
   initMap() {
-    this.map = L.map('map').setView([-12.075487, -77.064344], 13);
 
-    // L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
-    //   attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+    this.map = L.map('map').setView([-12.0431800, -77.0282400], 10);
+    // this.map = L.map('map').fitWorld();
+
+    L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
+      attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+      maxZoom: 19,
+      id: 'mapbox/streets-v11',
+      tileSize: 512,
+      zoomOffset: -1,
+      accessToken: 'pk.eyJ1IjoibHVpc2NoIiwiYSI6ImNrN3A4cXZrczBkaHUzZW1rNDR5bjFyc2IifQ.q56hDBHis9mIdxdXDlQJxw'
+    }).addTo(this.map);
+
+    // L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     //   maxZoom: 19,
-    //   id: 'mapbox/streets-v11',
-    //   tileSize: 512,
-    //   zoomOffset: -1,
-    //   accessToken: 'pk.eyJ1IjoibHVpc2NoIiwiYSI6ImNrN3A4cXZrczBkaHUzZW1rNDR5bjFyc2IifQ.q56hDBHis9mIdxdXDlQJxw'
+    //   attribution: '...'
     // }).addTo(this.map);
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '...'
-    }).addTo(this.map);
+    this.map.locate({ setView: true, maxZoom: 12 });
+
+    this.map.on('locationfound', (e) => {
+      var radius = e.accuracy;
+      L.marker(e.latlng).addTo(this.map)
+        .bindPopup("Mi ubicación").openPopup();
+      L.circle(e.latlng, radius).addTo(this.map);
+    });
+
+    this.map.on('locationerror', (e) => {
+      console.log(e.message);
+    });
 
     this.renderMarker();
     this.renderCircle();
@@ -141,7 +134,8 @@ export class Tab1Page implements AfterViewInit, OnInit {
             color = '#a40900';
             fillColor = '#a40900';
           }
-          let circle = L.circle([s.latitud, s.longitud], { radius: 1000, fillColor, color }).addTo(this.map);
+          let circle = L.circle([s.latitud, s.longitud], { radius: 1000, fillColor, color })
+            .addTo(this.map).bindPopup(`Radio: 1000m`);
         }
       });
     });

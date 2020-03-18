@@ -27,16 +27,16 @@ const routes: Routes = [
           }
         ]
       },
-      // {
-      //   path: 'tab3',
-      //   children: [
-      //     {
-      //       path: '',
-      //       loadChildren: () =>
-      //         import('../tab3/tab3.module').then(m => m.Tab3PageModule)
-      //     }
-      //   ]
-      // },
+      {
+        path: 'tab3',
+        children: [
+          {
+            path: '',
+            loadChildren: () =>
+              import('../tab3/tab3.module').then(m => m.Tab3PageModule)
+          }
+        ]
+      },
       {
         path: '',
         redirectTo: '/tabs/tab1',
