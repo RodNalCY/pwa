@@ -1,0 +1,7 @@
+{
+  "name": "pwa-mkc",
+  "integrations": {
+    "cordova": {}
+  },
+  "type": "angular"
+}
