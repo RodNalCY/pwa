@@ -1,6 +1,6 @@
 {
-  "name": "app",
-  "short_name": "app",
+  "name": "pm2.5",
+  "short_name": "pm2.5",
   "theme_color": "#1976d2",
   "background_color": "#fafafa",
   "display": "standalone",
