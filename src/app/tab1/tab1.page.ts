@@ -3,6 +3,7 @@ import * as L from 'leaflet';
 import { SeasonsService } from '../services/seasons.service';
 import { LegendComponent } from '../components/legend/legend.component';
 import { PopoverController } from '@ionic/angular';
+import { GeoSearchControl, OpenStreetMapProvider } from 'leaflet-geosearch';
 
 @Component({
   selector: 'app-tab1',
@@ -49,8 +50,31 @@ export class Tab1Page {
 
   initMap() {
 
+    const provider = new OpenStreetMapProvider();
+
+    const searchControl = new GeoSearchControl({
+      provider: provider,
+      autoClose: true,
+      autoComplete: false,
+      position: 'topright',
+      searchLabel: 'País, provincia, distrito, departamento'
+    });
+
+    let legend = L.control({ position: 'bottomright' });
+
+    legend.onAdd = function (map) {
+      var div = L.DomUtil.create('div', 'legend');
+      div.innerHTML = `
+      <ion-icon slot="start" name="square-sharp" color="greenMkc"></ion-icon> Bueno <br>
+      <ion-icon slot="start" name="square-sharp" color="yellowMkc"></ion-icon> Moderado <br>
+      <ion-icon slot="start" name="square-sharp" color="orangeMkc"></ion-icon> No saludable <br>
+      <ion-icon slot="start" name="square-sharp" color="roseMkc"></ion-icon> Insalubre <br>
+      <ion-icon slot="start" name="square-sharp" color="purpleMkc"></ion-icon> Muy insalubre <br>
+      <ion-icon slot="start" name="square-sharp" color="redDarkeMkc"></ion-icon> Peligroso <br>`;
+      return div;
+    };
+
     this.map = L.map('map').setView([-12.0431800, -77.0282400], 10);
-    // this.map = L.map('map').fitWorld();
 
     L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
       attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
@@ -67,6 +91,17 @@ export class Tab1Page {
     // }).addTo(this.map);
 
     this.map.locate({ setView: true, maxZoom: 12 });
+
+    this.map.addControl(searchControl);
+
+    legend.addTo(this.map);
+
+    this.map.on('geosearch/showlocation', (e) => {
+      // L.marker([e.location.y, e.location.x]).addTo(this.map)
+      //   .bindPopup(e.location.label).openPopup();
+
+      this.map.setView([e.location.y, e.location.x], 15);
+    });
 
     this.map.on('locationfound', (e) => {
       var radius = e.accuracy;
@@ -86,6 +121,8 @@ export class Tab1Page {
 
   renderMarker() {
 
+    let icon;
+
     this.seasons.forEach(s => {
 
       let div = document.createElement('div');
@@ -103,9 +140,43 @@ export class Tab1Page {
         p.appendChild(strong);
         p.appendChild(measure);
         div.appendChild(p)
+        if (sn.sensor.toLowerCase() === 'pm2.5') {
+          let measure = sn.medida ? sn.medida.medida : 0;
+          if (measure >= 0 && measure <= 50) {
+            icon = L.icon({
+              iconSize: [40, 40],
+              iconUrl: 'assets/pm/1584586682948.png'
+            });
+          } else if (measure > 50 && measure <= 100) {
+            icon = L.icon({
+              iconSize: [40, 40],
+              iconUrl: 'assets/pm/1584586652945.png'
+            });
+          } else if (measure > 100 && measure <= 150) {
+            icon = L.icon({
+              iconSize: [40, 40],
+              iconUrl: 'assets/pm/1584586702419.png'
+            });
+          } else if (measure > 150 && measure <= 200) {
+            icon = L.icon({
+              iconSize: [40, 40],
+              iconUrl: 'assets/pm/1584586671288.png'
+            });
+          } else if (measure > 200 && measure <= 300) {
+            icon = L.icon({
+              iconSize: [40, 40],
+              iconUrl: 'assets/pm/1584586716340.png'
+            });
+          } else {
+            icon = L.icon({
+              iconSize: [40, 40],
+              iconUrl: 'assets/pm/1584586730774.png'
+            });
+          }
+        }
       });
 
-      L.marker([s.latitud, s.longitud]).bindPopup(div).addTo(this.map);
+      L.marker([s.latitud, s.longitud], { icon }).bindPopup(div).addTo(this.map);
     });
   }
 
@@ -144,6 +215,4 @@ export class Tab1Page {
   compare(a: number | string, b: number | string, isAsc: boolean) {
     return (a < b ? -1 : 1) * (isAsc ? 1 : -1);
   }
-
-
 }
