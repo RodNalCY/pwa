@@ -4,7 +4,7 @@
 
 export const environment = {
   production: false,
-  url: 'https://pm25.tecnologiaperu.com/laravel/public/api'
+  url: 'https://sistemademonitoreo.tecnologiaperu.com/api'
 };
 
 /*
